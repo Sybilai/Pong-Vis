@@ -29,17 +29,17 @@
         if ( !action ) return;
         if ( action.direction == "none" ) return;
 
-        var racket = player.GetUserData().player.racket;
-        var racket_width = GameRules.basePaddleWidth;
-        var racket_speed = GameRules.basePaddleSpeed;
+        var paddle = player.GetUserData().player.paddle;
+        var paddle_width = GameRules.basePaddleWidth;
+        var paddle_speed = GameRules.basePaddleSpeed;
        
         var time_now = GameRules.currentTimestamp;
-        var distance = (time_now - action.timestamp)/GameRules.framesPerSecond * racket_speed;
+        var distance = (time_now - action.timestamp)/GameRules.framesPerSecond * paddle_speed;
 
         if (action.direction == "left" )
           distance *= -1;
 
-        racket.x += distance;
+        paddle.x += distance;
 
         Engine.calculatePlayer( player );
 
@@ -111,7 +111,7 @@
             break;
 
             case 'move':
-              Engine.players[ message.player_id + "" ].GetUserData().player.racket.x = message.x;
+              Engine.players[ message.player_id + "" ].GetUserData().player.paddle.x = message.x;
               Engine.players[ message.player_id + "" ].GetUserData().player.action = {direction: message.direction, timestamp: GameRules.currentTimestamp};
             break;
 
