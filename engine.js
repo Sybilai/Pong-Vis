@@ -117,7 +117,7 @@ var Engine = {
   },
 
   calculatePlayer: function(player) {
-    var racket = player.GetUserData().player.racket;
+    var paddle = player.GetUserData().player.paddle;
 
     var auxF = {
       first: {
@@ -125,18 +125,17 @@ var Engine = {
         y: -Meth.distance_from_center_to_edge + GameRules.basePaddleHeight/2 + GameRules.basePaddleToEdgeDistance
       },
       second: {
-        x: Engine.edges[0].GetShape().GetVertices[2].x + GameRules.basePaddleWidth/2,
+        x: Engine.edges[0].GetShape().GetVertices()[2].x + GameRules.basePaddleWidth/2,
         y: -Meth.distance_from_center_to_edge + GameRules.basePaddleHeight/2 + GameRules.basePaddleToEdgeDistance
       }
     };
     
     var cof = player.GetBody().GetAngle() / Meth.interior_angle * -1;
 
-    var position = Meth.getThirdPoint(auxF.first, auxF.second, racket.x);
+    var position = Meth.getThirdPoint(auxF.first, auxF.second, paddle.x);
     position = Meth.rotatePoint( position, Meth.angle_center * cof);
 
     player.GetBody().SetPosition({x: position.x + Engine.deplaseaza, y: position.y + Engine.deplaseaza});
-    player.GetBody().SetAngle( player.GetBody().GetAngle() );
   },
 
   destroyPlayer: function(edge) {
@@ -154,36 +153,37 @@ var Engine = {
       var action = Engine.actions[index];
 
       if ( !action ) return;
-      var racket = player.GetUserData().player.racket;
-      var racket_width = GameRules.basePaddleWidth;
-      var racket_speed = GameRules.basePaddleSpeed;
-      if ( racket.x == action.x  || 
-          (racket.x == Meth.edge_length - racket_width
-            && action.x > Meth.edge_length - racket_width) ) return;
+
+      var paddle = player.GetUserData().player.paddle;
+      var paddle_width = GameRules.basePaddleWidth;
+      var paddle_speed = GameRules.basePaddleSpeed;
+      if ( paddle.x == action.x  || 
+          (paddle.x == Meth.edge_length - paddle_width
+            && action.x > Meth.edge_length - paddle_width) ) return;
       
       var time_now = GameRules.currentTimestamp;
-      var distance = (time_now - action.timestamp)/GameRules.framesPerSecond * racket_speed;
-      distance = Math.min( Math.abs(racket.x - action.x), distance );
+      var distance = (time_now - action.timestamp)/GameRules.framesPerSecond * paddle_speed;
+      distance = Math.min( Math.abs(paddle.x - action.x), distance );
 
-      if ( racket.x > action.x ) {
-        racket.x = Math.max( racket.x - distance, 0 );
+      if ( paddle.x > action.x ) {
+        paddle.x = Math.max( paddle.x - distance, 0 );
       } else {
-        if ( racket.x + racket_width + distance 
+        if ( paddle.x + paddle_width + distance 
               > Meth.edge_length ) {
-          racket.x = Meth.edge_length - racket_width;
+          paddle.x = Meth.edge_length - paddle_width;
         } else {
-          racket.x = racket.x + distance;
+          paddle.x = paddle.x + distance;
         }
       }
 
       Engine.calculatePlayer( player );
 
       var direction = "";
-      if ( racket.x == action.x || 
-          (racket.x == Meth.edge_length - racket_width 
-            && action.x > Meth.edge_length - racket_width)) {
+      if ( paddle.x == action.x || 
+          (paddle.x == Meth.edge_length - paddle_width 
+            && action.x > Meth.edge_length - paddle_width)) {
         direction = "none";
-      } else if ( racket.x < action.x ) {
+      } else if ( paddle.x < action.x ) {
         direction = "right";
       } else {
         direction = "left";
@@ -191,7 +191,7 @@ var Engine = {
       player.GetUserData().player.action.direction = direction;
       
       if (time_now - action.last_time_reported > GameRules.framesPerSecond || direction == "none") {
-        if (Engine.callbackMove) Engine.callbackMove( index, racket.x, direction);
+        if (Engine.callbackMove) Engine.callbackMove( index, paddle.x, direction);
         action.last_time_reported = time_now;
       }
 
@@ -201,6 +201,7 @@ var Engine = {
 
   destroyObj: function(obj) {
     this.world.DestroyBody( obj.GetBody() );
+    delete obj;
   },
 
   addBall: function(ball_pointer) {
@@ -219,15 +220,16 @@ var Engine = {
     bodyDef.linearVelocity.y = 2;
 
     var ball = Engine.world.CreateBody(bodyDef).CreateFixture(fixDef);
-    ball.SetUserData({
-      type: 'ball',
-      ball: ball_pointer
-    });
 
     if (ball_pointer) {
       ball_pointer.linearVelocity = ball.GetBody().GetLinearVelocity();
       ball_pointer.position = ball.GetBody().GetPosition();
     }
+
+    ball.SetUserData({
+      type: 'ball',
+      ball: ball_pointer
+    });
 
     Engine.balls.push( ball );
 
