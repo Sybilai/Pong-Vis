@@ -1,17 +1,31 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #0B111F;
+      }
+      #c {
+        display: block;
+        margin: 0 auto;
+      }
+    </style>
+
     <script src="box2dweb.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
   </head>
   <body>
     
-    <canvas id="c" width="640" height="640" style="border: 1px solid black"></canvas>
+    <canvas id="c"></canvas>
     <script src="meth.js" ></script>
     <script src="engine.js"></script>
 
     <script>
       // rewrite engine
-      Engine.deplaseaza = 10;
       Engine.clearAll = function() {
         while (Engine.balls.length) Engine.destroyBall(0);
         while (Engine.edges.length) {
@@ -47,10 +61,24 @@
       }
     };
 
+    Engine.debugDraw = function() {
+      if (!document) return;
+      var debugDraw = new b2DebugDraw();
+      debugDraw.SetSprite(document.getElementById("c").getContext("2d"));
+      console.log( debugDraw );
+      debugDraw.SetDrawScale( $("#c").width() / 2.5 / Meth.radius);
+      debugDraw.SetFillAlpha(0.3);
+      debugDraw.SetLineThickness(0);
+      debugDraw.SetFlags(b2DebugDraw.e_shapeBit);
+      Engine.world.SetDebugDraw(debugDraw);
+    };
 
     </script>
 
     <script>
+      var c_dim = Math.min( $("html").width(), $("html").height() );
+      $("#c").attr( "width", c_dim );
+      $("#c").attr( "height", c_dim );
       window.WebScoket = window.WebSocket || window.MozWebSocket;
 
       var GameRules;
@@ -77,13 +105,14 @@
                 edge.GetUserData().edge = message.field[i];
               }
               Engine.initializePolygon(GameRules.baseEdgeWidth, message.field.length);
+              Engine.deplaseaza = Meth.radius + 1;
               Engine.calculatePolygon();
 
               for (var i = 0, l = message.balls.length; i < l; ++i) {
                 var ball = Engine.addBall();
                 ball.GetBody().SetPosition({
-                  x: message.balls[i].position.x + 10,
-                  y: message.balls[i].position.y + 10
+                  x: message.balls[i].position.x + Engine.deplaseaza,
+                  y: message.balls[i].position.y + Engine.deplaseaza
                 });
                 ball.GetBody().SetLinearVelocity( message.balls[i].linearVelocity );
                 ball.GetUserData().ball = message.balls[i];
@@ -94,15 +123,15 @@
                 message.field[i].player.action.timestamp = GameRules.currentTimestamp;
                 Engine.addPlayer( message.field[i].player, Engine.edges[i] );
               }
-
+              Engine.debugDraw();
             break;
 
             case 'collision':
               for (var i = 0, l = Engine.balls.length; i < l; ++i) {
                 if (message.ball.id != Engine.balls[i].GetUserData().ball.id) continue;
                 Engine.balls[i].GetBody().SetPosition({
-                  x: message.ball.position.x + 10,
-                  y: message.ball.position.y + 10
+                  x: message.ball.position.x + Engine.deplaseaza,
+                  y: message.ball.position.y + Engine.deplaseaza
                 });
                 Engine.balls[i].GetBody().SetLinearVelocity( message.ball.linearVelocity );
                
@@ -118,7 +147,6 @@
             case undefined:
               GameRules = message;
               Engine.initializeWorld();
-              Engine.debugDraw();
               update();
               break;
           }
