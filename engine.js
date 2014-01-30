@@ -209,7 +209,8 @@ var Engine = {
     fixDef.density = 1.0;
     fixDef.friction = 0;
     fixDef.restitution = 1.0;
-
+    console.log( fixDef );
+    fixDef.filter.maskBits = 0x0000;
     var bodyDef = new b2BodyDef;
     bodyDef.type = b2Body.b2_dynamicBody;
         
