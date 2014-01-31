@@ -49,8 +49,8 @@ var Engine = {
     Engine.updatePlayers();
     Engine.world.Step(
         1 / GameRules.framesPerSecond   //frame-rate
-      , 10       //velocity iterations
-      , 10       //position iterations
+      , 50       //velocity iterations
+      , 50       //position iterations
     );
 
     Engine.world.ClearForces();
@@ -209,8 +209,7 @@ var Engine = {
     fixDef.density = 1.0;
     fixDef.friction = 0;
     fixDef.restitution = 1.0;
-    console.log( fixDef );
-    fixDef.filter.maskBits = 0x0000;
+    // fixDef.filter.maskBits = 0x0000; // disable collisions
     var bodyDef = new b2BodyDef;
     bodyDef.type = b2Body.b2_dynamicBody;
         
