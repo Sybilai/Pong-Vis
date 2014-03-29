@@ -60,22 +60,22 @@
         action.timestamp = time_now;
       }
     };
-
     Engine.debugDraw = function() {
       if (!document) return;
       var debugDraw = new b2DebugDraw();
       debugDraw.SetSprite(document.getElementById("c").getContext("2d"));
-      console.log( debugDraw );
       debugDraw.SetDrawScale( $("#c").width() / 2.5 / Meth.radius);
       debugDraw.SetFillAlpha(0.3);
       debugDraw.SetLineThickness(0);
       debugDraw.SetFlags(b2DebugDraw.e_shapeBit);
       Engine.world.SetDebugDraw(debugDraw);
-    };
+ 
+   };
 
     </script>
 
     <script>
+      Engine.ctx = document.getElementById("c").getContext("2d");
       var c_dim = Math.min( $("html").width(), $("html").height() );
       $("#c").attr( "width", c_dim );
       $("#c").attr( "height", c_dim );
@@ -83,7 +83,7 @@
 
       var GameRules;
 
-      var connection = new WebSocket('ws://localhost:62421');
+      var connection = new WebSocket('ws://sybilai.com:62421');
 
       connection.onopen = function() {
         console.log('Conexiune deschisa!');
@@ -107,6 +107,7 @@
               Engine.initializePolygon(GameRules.baseEdgeWidth, message.field.length);
               Engine.deplaseaza = Meth.radius + 1;
               Engine.calculatePolygon();
+              Engine.scale = $("#c").width() / 2.5 / Meth.radius;
 
               for (var i = 0, l = message.balls.length; i < l; ++i) {
                 var ball = Engine.addBall();
@@ -154,9 +155,25 @@
       }
 
       function update() {
+        var ctx = Engine.ctx;
+        var scale = Engine.scale;
         ++GameRules.currentTimestamp;
         Engine.update();
         Engine.world.DrawDebugData();
+        for (var i = 0, _l = Engine.edges.length; i < _l; ++i) {
+          var edge = Engine.edges[i].m_userData.edge;
+          var center = Engine.edges[i].m_body.m_sweep.c;
+          var angle = Engine.edges[i].GetBody().GetAngle()%Math.PI;
+          if (!edge.vacant) {
+            ctx.save();
+            ctx.fillStyle = '#fff';
+            ctx.font = '15pt Helvetica';
+            ctx.translate(center.x*scale, center.y*scale);
+            ctx.rotate(angle);
+            ctx.fillText(edge.player.name, -50, 0);
+            ctx.restore();
+          }
+        }
         setTimeout(update, 1000/GameRules.framesPerSecond);
       }
 
